@@ -1,0 +1,8 @@
+[env]
+watch_path = 
+ssh_key_path = 
+host = 
+username = 
+port = 
+dest_path = 
+
