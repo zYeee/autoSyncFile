@@ -3,6 +3,8 @@
 
 import time
 import paramiko
+import logging
+import os
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 from configparser import SafeConfigParser
@@ -28,15 +30,19 @@ class FileEventHandler(PatternMatchingEventHandler):
 
     def on_created(self, event):
         dest_path = event.src_path.replace(self.watch_path, self.dest_path)
+        self.create_path(os.path.dirname(dest_path))
+
         if event.is_directory:
             self.sftp.mkdir(dest_path)
         else:
             self.sftp.put(event.src_path, dest_path)
-    
+            logging.info('Modified: %s', dest_path)
+
     def on_modified(self, event):
         if not event.is_directory:
             dest_path = event.src_path.replace(self.watch_path, self.dest_path)
             self.sftp.put(event.src_path, dest_path)
+            logging.info('Modified: %s', dest_path)
 
     def on_moved(self, event):
         from_path = event.src_path.replace(self.watch_path, self.dest_path)
@@ -45,9 +51,18 @@ class FileEventHandler(PatternMatchingEventHandler):
             self.sftp.rename(from_path, dest_path)
         except:
             pass
+        logging.info('Moved: %s', dest_path)
+
+    def create_path(self, path):
+        try:
+            self.sftp.lstat(path)
+        except FileNotFoundError:
+            self.create_path(os.path.dirname(path))
+            self.sftp.mkdir(path)
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     config = getConfig()
     ignore = getIgnore()
     watch_path = config['watch_path']
