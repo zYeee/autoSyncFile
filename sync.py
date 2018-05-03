@@ -10,7 +10,7 @@ from watchdog.events import PatternMatchingEventHandler
 from configparser import SafeConfigParser
 
 
-def getConfig(sectionName='env'):
+def getConfig(sectionName='default'):
     config = SafeConfigParser()
     config.readfp(open('config.conf'))
     return dict(config.items(sectionName))
@@ -71,7 +71,7 @@ class FileEventHandler(PatternMatchingEventHandler):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-    config = getConfig()
+    config = getConfig('userdata')
     ignore = getIgnore()
     watch_path = config['watch_path']
     host = config['host']
@@ -89,9 +89,9 @@ if __name__ == "__main__":
     observer.schedule(event_handler, watch_path, recursive=True)
     observer.start()
 
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        observer.stop()
+#    try:
+#        while True:
+#            time.sleep(1)
+#    except KeyboardInterrupt:
+#        observer.stop()
     observer.join()
