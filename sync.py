@@ -36,7 +36,7 @@ class FileEventHandler(PatternMatchingEventHandler):
             self.sftp.mkdir(dest_path)
         else:
             self.sftp.put(event.src_path, dest_path)
-            logging.info('Modified: %s', dest_path)
+        logging.info('Modified: %s', dest_path)
 
     def on_modified(self, event):
         if not event.is_directory:
@@ -52,6 +52,14 @@ class FileEventHandler(PatternMatchingEventHandler):
         except:
             pass
         logging.info('Moved: %s', dest_path)
+
+    def on_deleted(self, event):
+        src_path = event.src_path.replace(self.watch_path, self.dest_path)
+        if event.is_directory:
+            self.sftp.rmdir(src_path)
+        else:
+            self.sftp.remove(src_path)
+        logging.info('deleted: %s', src_path)
 
     def create_path(self, path):
         try:
