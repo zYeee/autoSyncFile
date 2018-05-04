@@ -12,7 +12,7 @@ from configparser import SafeConfigParser
 
 def getConfig(sectionName='env'):
     config = SafeConfigParser()
-    config.readfp(open('config.conf'))
+    config.read_file(open('config.conf'))
     return dict(config.items(sectionName))
 
 
@@ -33,7 +33,10 @@ class FileEventHandler(PatternMatchingEventHandler):
         self.create_path(os.path.dirname(dest_path))
 
         if event.is_directory:
-            self.sftp.mkdir(dest_path)
+            try:
+                self.sftp.mkdir(dest_path)
+            except OSError:
+                pass
         else:
             self.sftp.put(event.src_path, dest_path)
         logging.info('Modified: %s', dest_path)
@@ -55,11 +58,14 @@ class FileEventHandler(PatternMatchingEventHandler):
 
     def on_deleted(self, event):
         src_path = event.src_path.replace(self.watch_path, self.dest_path)
-        if event.is_directory:
-            self.sftp.rmdir(src_path)
-        else:
-            self.sftp.remove(src_path)
-        logging.info('deleted: %s', src_path)
+        try:
+            if event.is_directory:
+                self.sftp.rmdir(src_path)
+            else:
+                self.sftp.remove(src_path)
+            logging.info('deleted: %s', src_path)
+        except FileNotFoundError:
+            logging.info('can not delete: %s', src_path)
 
     def create_path(self, path):
         try:
