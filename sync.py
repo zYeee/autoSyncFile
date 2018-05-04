@@ -3,6 +3,7 @@
 
 import paramiko
 import logging
+import time
 from watchdog.observers import Observer
 from configparser import SafeConfigParser
 from fileEvent import FileEventHandler
@@ -39,9 +40,9 @@ if __name__ == "__main__":
     observer.schedule(event_handler, watch_path, recursive=True)
     observer.start()
 
-#    try:
-#        while True:
-#            time.sleep(1)
-#    except KeyboardInterrupt:
-#        observer.stop()
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        observer.stop()
     observer.join()
