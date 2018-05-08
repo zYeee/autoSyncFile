@@ -4,6 +4,7 @@
 import paramiko
 import logging
 import time
+import os
 from watchdog.observers import Observer
 from configparser import SafeConfigParser
 from fileEvent import FileEventHandler
@@ -22,7 +23,7 @@ def getIgnore():
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-    config = getConfig('userdata')
+    config = getConfig('poppen')
     ignore = getIgnore()
     watch_path = config['watch_path']
     host = config['host']
@@ -31,12 +32,15 @@ if __name__ == "__main__":
     username = config['username']
     dest_path = config['dest_path']
     private_key = paramiko.RSAKey.from_private_key_file(ssh_key_path)
-    ssh = paramiko.Transport(host, int(port))
-    ssh.connect(username=username, pkey=private_key)
-    sftp = paramiko.SFTPClient.from_transport(ssh)
+    transport = paramiko.Transport(host, int(port))
+    transport.connect(username=username, pkey=private_key)
+    sftp = paramiko.SFTPClient.from_transport(transport)
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(host, port, username)
 
     observer = Observer()
-    event_handler = FileEventHandler(sftp, watch_path, dest_path, ignore)
+    event_handler = FileEventHandler(sftp, ssh, watch_path, dest_path, ignore)
     observer.schedule(event_handler, watch_path, recursive=True)
     observer.start()
 
