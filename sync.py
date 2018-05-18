@@ -23,7 +23,7 @@ def getIgnore():
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-    config = getConfig('poppen')
+    config = getConfig('v3')
     ignore = getIgnore()
     watch_path = config['watch_path']
     host = config['host']

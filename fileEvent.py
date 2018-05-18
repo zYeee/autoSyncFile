@@ -1,5 +1,6 @@
 import os
 import logging
+import time
 from watchdog.events import PatternMatchingEventHandler
 
 
@@ -13,7 +14,6 @@ class FileEventHandler(PatternMatchingEventHandler):
 
     def on_created(self, event):
         dest_path = event.src_path.replace(self.watch_path, self.dest_path)
-        print(dest_path)
         self.create_path(os.path.dirname(dest_path))
 
         if event.is_directory:
@@ -43,8 +43,12 @@ class FileEventHandler(PatternMatchingEventHandler):
 
     def on_deleted(self, event):
         src_path = event.src_path.replace(self.watch_path, self.dest_path)
-        self.ssh.exec_command('rm -rf ' + src_path)
-        logging.info('deleted: %s', src_path)
+        try:
+            if event.is_directory is False:
+                self.sftp.remove(src_path)
+                logging.info('deleted: %s', src_path)
+        except FileNotFoundError:
+            pass
 
     def create_path(self, path):
         if self.is_exsit(path) is False:
