@@ -4,7 +4,6 @@
 import paramiko
 import logging
 import time
-import os
 from watchdog.observers import Observer
 from configparser import SafeConfigParser
 from fileEvent import FileEventHandler
@@ -21,9 +20,8 @@ def getIgnore():
         return [line.strip('\n') for line in f.readlines() if line]
 
 
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-    config = getConfig('v3')
+def addServer(configName):
+    config = getConfig(configName)
     ignore = getIgnore()
     watch_path = config['watch_path']
     host = config['host']
@@ -42,7 +40,19 @@ if __name__ == "__main__":
     observer = Observer()
     event_handler = FileEventHandler(sftp, ssh, watch_path, dest_path, ignore)
     observer.schedule(event_handler, watch_path, recursive=True)
-    observer.start()
+    return observer
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    serverList = getConfig('servers')
+    serverName = serverList['name'].split(" ")
+    observers = []
+    for server in serverName:
+        observer = addServer(server)
+        observer.start()
+        observers.append(observer)
+
 
     try:
         while True:
