@@ -31,7 +31,8 @@ def addServer(configName):
     serverInfo['private_key'] = paramiko.RSAKey.from_private_key_file(ssh_key_path)
     serverInfo['username'] = config['username']
     dest_path = config['dest_path']
-    serverInfo['transport'] = paramiko.Transport(host, int(port))
+    serverInfo['host'] = host
+    serverInfo['port'] = int(port)
 
     observer = Observer()
     event_handler = FileEventHandler(serverInfo, watch_path, dest_path, ignore)

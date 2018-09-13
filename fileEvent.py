@@ -16,7 +16,8 @@ class FileEventHandler(PatternMatchingEventHandler):
     
     def connect(self):
         logging.info("-------connect-------")
-        transport = self.serverInfo['transport']
+        transport = paramiko.Transport(
+                self.serverInfo['host'], self.serverInfo['port'])
         username = self.serverInfo['username']
         private_key = self.serverInfo['private_key']
         transport.connect(username=username, pkey=private_key)
@@ -37,10 +38,14 @@ class FileEventHandler(PatternMatchingEventHandler):
         logging.info('Created: %s', dest_path)
 
     def on_modified(self, event):
-        if not event.is_directory:
-            dest_path = event.src_path.replace(self.watch_path, self.dest_path)
+        try:
+            if not event.is_directory:
+                dest_path = event.src_path.replace(self.watch_path, self.dest_path)
+                self.sftp.put(event.src_path, dest_path)
+        except paramiko.ssh_exception.SSHException:
+            self.connect()
             self.sftp.put(event.src_path, dest_path)
-            logging.info('Modified: %s', dest_path)
+        logging.info('Modified: %s', dest_path)
 
     def on_moved(self, event):
         try:
