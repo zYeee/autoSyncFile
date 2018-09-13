@@ -42,10 +42,11 @@ class FileEventHandler(PatternMatchingEventHandler):
             if not event.is_directory:
                 dest_path = event.src_path.replace(self.watch_path, self.dest_path)
                 self.sftp.put(event.src_path, dest_path)
+                logging.info('Modified: %s', dest_path)
         except paramiko.ssh_exception.SSHException:
             self.connect()
             self.sftp.put(event.src_path, dest_path)
-        logging.info('Modified: %s', dest_path)
+            logging.info('Modified: %s', dest_path)
 
     def on_moved(self, event):
         try:
